@@ -26,7 +26,8 @@ with open(aliases_fn_path, 'r') as fp:
     aliases = json.load(fp)
 
 if len(sys.argv) < 2:
-    raise ValueError('Too few arguments')
+    print(json.dumps(aliases, indent=4))
+    exit(0)
 
 if sys.argv[1] in ['-r', '--remove']:
     if len(sys.argv) < 3:
