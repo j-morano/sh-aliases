@@ -24,12 +24,12 @@ ln -s /path/to/sh-aliases/sh_aliases.py ~/.local/bin/a
 ## Usage
 
 ```text
-Usage: a [OPTION]... [ALIAS] [COMMAND]
+Usage: sh_aliases.py [OPTION]... [ALIAS] [COMMAND]
 Add ALIAS of COMMAND.
 
 Mandatory arguments to long options are mandatory for short options too.
   -r, --remove=ALIAS         remove ALIAS
-      --help     display this help and exit
+  -h, --help                 display this help and exit
 
 Exit status:
  0  if OK,
@@ -37,3 +37,5 @@ Exit status:
 
 Full documentation <https://github.com/sonarom/sh-aliases>
 ```
+
+If you created a link to the script, then you can run the program with the correspondig name, e.g. `a`.
