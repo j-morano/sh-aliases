@@ -29,13 +29,14 @@ Add ALIAS of COMMAND.
 
 Mandatory arguments to long options are mandatory for short options too.
   -r, --remove=ALIAS         remove ALIAS
+  -e, --edit                 edit aliases using a text editor
   -h, --help                 display this help and exit
 
 Exit status:
  0  if OK,
  1  if problems
 
-Full documentation <https://github.com/sonarom/sh-aliases>
+Full documentation <https://github.com/sonarom/sh-aliases>\
 ```
 
 If you created a link to the script, then you can run the program with the correspondig name, e.g. `a`.

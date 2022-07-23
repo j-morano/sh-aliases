@@ -7,7 +7,7 @@ import re
 
 
 # Specify the path to the JSON file where you want to store the aliases
-aliases_fn = ''
+aliases_fn = '/media/morano/SW1000/etc/aliases.json'
 
 
 help = """\
@@ -16,6 +16,7 @@ Add ALIAS of COMMAND.
 
 Mandatory arguments to long options are mandatory for short options too.
   -r, --remove=ALIAS         remove ALIAS
+  -e, --edit                 edit aliases using a text editor
   -h, --help                 display this help and exit
 
 Exit status:
@@ -26,7 +27,7 @@ Full documentation <https://github.com/sonarom/sh-aliases>\
 """
 
 
-permitted_pattern = r'[^a-zA-Z0-9]'
+permitted_pattern = r'[^a-zA-Z0-9_]'
 
 
 aliases = None
@@ -41,12 +42,14 @@ if len(sys.argv) < 2:
 else:
     if sys.argv[1] in ['-h', '--help']:
         print(help)
+    elif sys.argv[1] in ['-e', '--edit']:
+        os.system('${VISUAL:-$EDITOR} -- '+aliases_fn)
     elif sys.argv[1] in ['-r', '--remove']:
         if len(sys.argv) < 3:
             raise ValueError('Too few arguments')
         del aliases[sys.argv[2]]
         with open(aliases_fn, 'w') as fp:
-            json.dump(aliases, fp)
+            json.dump(aliases, fp, indent=4)
     else:
         if len(sys.argv) > 2:
             if re.search(permitted_pattern, sys.argv[1]):
@@ -54,6 +57,6 @@ else:
             command = ' '.join(sys.argv[2:])
             aliases[sys.argv[1]] = command
             with open(aliases_fn, 'w') as fp:
-                json.dump(aliases, fp)
+                json.dump(aliases, fp, indent=4)
         else:
             os.system(aliases[sys.argv[1]])
