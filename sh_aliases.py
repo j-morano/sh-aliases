@@ -17,15 +17,16 @@ Usage: sh_aliases.py [OPTION]... [ALIAS] [COMMAND]
 Add ALIAS of COMMAND.
 
 Mandatory arguments to long options are mandatory for short options too.
-  -r, --remove=ALIAS         remove ALIAS
   -e, --edit                 edit aliases using a text editor
   -h, --help                 display this help and exit
+  -r, --remove=ALIAS         remove ALIAS
+  -v, --version              display version information and exit
 
 Exit status:
  0  if OK,
  1  if problems
 
-Full documentation <https://github.com/sonarom/sh-aliases>\
+Full documentation <https://github.com/j-morano/sh-aliases>\
 """
 
 
