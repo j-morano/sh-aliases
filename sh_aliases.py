@@ -5,6 +5,8 @@ import sys
 import json
 import re
 
+VERSION = '1.0'
+
 
 # Specify the path to the JSON file where you want to store the aliases
 aliases_fn = '/media/morano/SW1000/etc/aliases.json'
@@ -42,6 +44,8 @@ if len(sys.argv) < 2:
 else:
     if sys.argv[1] in ['-h', '--help']:
         print(help)
+    elif sys.argv[1] in ['-v', '--version']:
+        print(f'sh_aliases.py {VERSION}')
     elif sys.argv[1] in ['-e', '--edit']:
         os.system('${VISUAL:-$EDITOR} -- '+aliases_fn)
     elif sys.argv[1] in ['-r', '--remove']:
