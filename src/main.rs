@@ -167,13 +167,14 @@ fn main() {
                         );
                         exit(1);
                     } else {
+                        let command = aliases.get(option).unwrap();
                         // Print line of ---
                         println!("{}", "-".repeat(80));
-                        println!("{}", aliases.get(option).unwrap());
+                        println!("{}", command);
                         println!("{}", "-".repeat(80));
-                        let command_parts: Vec<&str> = aliases.get(option).unwrap().split(" ").collect();
-                        let mut child = Command::new(command_parts[0])
-                            .args(&command_parts[1..])
+                        let mut child = Command::new("sh")
+                            .arg("-c")
+                            .arg(command)
                             .stdin(Stdio::inherit())
                             .stdout(Stdio::inherit())
                             .stderr(Stdio::inherit())
