@@ -11,32 +11,27 @@ git clone git@github.com:sonarom/sh-aliases.git
 ```
 Then, it is necessary to modify, in the program, the path to the file where the aliases will be stored.
 ```shell
-cd sh-aliases
-vi sh_aliases.py
-# -> change 'aliases_fn'
-```
- 
-Create link to the program in a PATH directory; e.g.:
-```shell
-ln -s /path/to/sh-aliases/sh_aliases.py ~/.local/bin/a
+wget https://github.com/j-morano/sh-aliases/releases/latest/download/sh-aliases
+chmod +x sh-aliases
+# Move to a directory in your PATH, e.g.:
+mv sh-aliases $HOME/.local/bin/<desired name>
 ```
 
 ## Usage
 
 ```text
-Usage: sh_aliases.py [OPTION]... [ALIAS] [COMMAND]
+Usage: sh-aliases [OPTION]... [ALIAS] [COMMAND]
 Add ALIAS of COMMAND.
 
 Mandatory arguments to long options are mandatory for short options too.
-  -r, --remove=ALIAS         remove ALIAS
   -e, --edit                 edit aliases using a text editor
   -h, --help                 display this help and exit
+  -r, --remove=ALIAS         remove ALIAS
+  -v, --version              display version information and exit
 
 Exit status:
  0  if OK,
  1  if problems
 
-Full documentation <https://github.com/sonarom/sh-aliases>\
+Full documentation <https://github.com/j-morano/sh-aliases>\
 ```
-
-If you created a link to the script, then you can run the program with the correspondig name, e.g. `a`.
