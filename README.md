@@ -5,11 +5,6 @@ Program to dynamically add shell aliases; shell-agnostic.
 
 ## Installation
 
-Clone repository
-```shell
-git clone git@github.com:sonarom/sh-aliases.git
-```
-Then, it is necessary to modify, in the program, the path to the file where the aliases will be stored.
 ```shell
 wget https://github.com/j-morano/sh-aliases/releases/latest/download/sh-aliases
 chmod +x sh-aliases
