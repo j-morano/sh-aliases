@@ -7,17 +7,17 @@ use std::env::var;
 
 const HELP: &str = "\
 Usage: sh-aliases [OPTION]... [ALIAS] [COMMAND]
-Add ALIAS of COMMAND.
+Manage shell aliases.
 
-Mandatory arguments to long options are mandatory for short options too.
+Options:
   -e, --edit                 edit aliases using a text editor
   -h, --help                 display this help and exit
   -r, --remove=ALIAS         remove ALIAS
   -v, --version              display version information and exit
 
 Exit status:
- 0  if OK,
- 1  if problems
+  0  if OK,
+  1  if problems
 
 Full documentation <https://github.com/j-morano/sh-aliases>\
 ";
@@ -122,8 +122,9 @@ fn main() {
     if args.len() < 2 {
         for (key, value) in &aliases {
             println!("{}", "-".repeat(80));
-            println!("{} --> {}", key, value);
+            println!("{}\n$ {}", key, value);
         }
+        println!("{}", "-".repeat(80));
     } else {
         let option = &args[1];
         match option.as_str() {
@@ -156,6 +157,7 @@ fn main() {
                 let alias = &args[2];
                 aliases.remove(alias);
                 write_aliases(&aliases, aliases_fn);
+                println!("Removed alias '{}'", alias);
                 exit(0);
             },
             _ => {
@@ -183,12 +185,14 @@ fn main() {
                         let ecode = child.wait().expect("Failed to wait on child");
                         exit(ecode.code().unwrap_or(1)); 
                     }
+                } else {
+                    let alias = option;
+                    let command = &args[2..].join(" ");
+                    aliases.insert(alias.to_string(), command.to_string());
+                    write_aliases(&aliases, aliases_fn);
+                    println!("Added alias '{}'", alias);
+                    exit(0);
                 }
-                let alias = option;
-                let command = &args[2..].join(" ");
-                aliases.insert(alias.to_string(), command.to_string());
-                write_aliases(&aliases, aliases_fn);
-                exit(0);
             }
         }
     }
