@@ -183,6 +183,7 @@ fn main() {
                             .spawn()
                             .expect("Failed to execute command");
                         let ecode = child.wait().expect("Failed to wait on child");
+                        println!("{}", "-".repeat(80));
                         exit(ecode.code().unwrap_or(1)); 
                     }
                 } else {
