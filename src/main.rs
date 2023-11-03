@@ -120,6 +120,9 @@ fn main() {
     }
 
     if args.len() < 2 {
+        // Order aliases by key. Lowercase all keys.
+        let mut aliases: Vec<_> = aliases.iter().collect();
+        aliases.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
         for (key, value) in &aliases {
             println!("{}", "-".repeat(80));
             println!("{}\n$ {}", key, value);
