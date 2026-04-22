@@ -1,9 +1,9 @@
 use std::fs;
+use std::path::Path;
 use std::process::{Command, Stdio, exit};
 use std::io::Write;
 use std::env::var;
-
-
+use std::collections::HashMap;
 
 const HELP: &str = "\
 Usage: sh-aliases [OPTION]... [ALIAS] [COMMAND]
@@ -22,66 +22,83 @@ Exit status:
 Full documentation <https://github.com/j-morano/sh-aliases>\
 ";
 
-
-
-
-/* Both config and aliases' files are key-value text files.
- * Keys and values are separated by " --> ".
- * Different key-value pairs are separated by newlines.
+/* Both config and aliases' files use a block format.
+ * Keys start with a '#' on a new line.
+ * Subsequent lines until the next '#' are the values (commands).
  */
 
 const DEFAULT_CONFIG: &str = "\
-aliases_fn --> $HOME/.local/share/sh-aliases/aliases.txt
+#aliases_fn
+$HOME/.local/share/sh-aliases/aliases.txt
 ";
 
 const CONFIG_FN: &str = "$HOME/.config/sh-aliases.conf";
 
-
-
-fn parse(path_or_contents: &str, are_contents: bool) -> std::collections::HashMap<String, String> {
-    let mut map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    let contents: String;
-    if are_contents {
-        contents = path_or_contents.to_string();
+fn parse(path_or_contents: &str, are_contents: bool) -> HashMap<String, String> {
+    let mut map: HashMap<String, String> = HashMap::new();
+    let contents = if are_contents {
+        path_or_contents.to_string()
     } else {
-        contents = fs::read_to_string(path_or_contents)
-            .expect("Should have been able to read the file");
-    }
+        fs::read_to_string(path_or_contents)
+            .expect("Should have been able to read the file")
+    };
+
+    let mut current_key: Option<String> = None;
+    let mut current_value: Vec<String> = Vec::new();
+
     for line in contents.lines() {
-        let mut kv = line.split(" --> ");
-        let key = kv.next().unwrap();
-        let value = kv.next().unwrap();
-        map.insert(key.to_string(), value.to_string());
+        if let Some(stripped) = line.strip_prefix('#') {
+            // Save the previous key-value pair if it exists
+            if let Some(key) = current_key {
+                map.insert(key, current_value.join("\n").trim().to_string());
+            }
+            // Start a new key (remove the '#' and trim)
+            current_key = Some(stripped.trim().to_string());
+            current_value.clear();
+        } else if current_key.is_some() {
+            // Collect lines for the current key
+            current_value.push(line.to_string());
+        }
     }
+
+    // Insert the final key-value pair after the loop finishes
+    if let Some(key) = current_key {
+        map.insert(key, current_value.join("\n").trim().to_string());
+    }
+
     map
 }
 
-fn write_aliases(aliases: &std::collections::HashMap<String, String>, aliases_fn: String) {
-    let mut file = std::fs::File::create(aliases_fn).unwrap();
+fn write_aliases(aliases: &HashMap<String, String>, aliases_fn: String) {
+    let mut file = fs::File::create(aliases_fn).unwrap();
     for (key, value) in aliases {
-        writeln!(file, "{} --> {}", key, value).unwrap();
+        writeln!(file, "#{}", key).unwrap();
+        writeln!(file, "{}\n", value).unwrap(); // Added extra newline for readability
     }
+}
+
+fn print_separator() {
+    println!("{}", "-".repeat(80));
 }
 
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
 
-    let mut aliases: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+    let mut aliases: HashMap<String, String> = HashMap::new();
 
-    let config_options: std::collections::HashMap<String, String>;
-    if std::path::Path::new(CONFIG_FN).exists() {
-        config_options = parse(CONFIG_FN, false);
+    let config_options = if Path::new(CONFIG_FN).exists() {
+        parse(CONFIG_FN, false)
     } else {
-        config_options = parse(DEFAULT_CONFIG, true);
-    }
+        parse(DEFAULT_CONFIG, true)
+    };
+
     let mut aliases_fn = config_options.get("aliases_fn").unwrap().to_string();
     let home = var("HOME").unwrap();
     aliases_fn = aliases_fn.replace("$HOME", home.as_str());
 
-
-    if !std::path::Path::new(aliases_fn.as_str()).exists() {
-        match std::fs::File::create(aliases_fn.as_str()) {
+    if !Path::new(aliases_fn.as_str()).exists() {
+        match fs::File::create(aliases_fn.as_str()) {
             Ok(_) => {
                 eprintln!("Created file '{}'", aliases_fn);
                 exit(0);
@@ -89,11 +106,12 @@ fn main() {
             Err(_) => {
                 // Get parent directory of aliases_fn.
                 let mut parent = aliases_fn.clone();
-                parent.pop();
+                parent.pop(); // Remove the filename to get the dir path
+
                 // Try to create the parent directory.
-                match std::fs::create_dir_all(parent.clone()) {
+                match fs::create_dir_all(parent.clone()) {
                     Ok(_) => {
-                        match std::fs::File::create(aliases_fn.as_str()) {
+                        match fs::File::create(aliases_fn.as_str()) {
                             Ok(_) => { },
                             Err(_) => {
                                 eprintln!("Failed to create file '{}'", aliases_fn);
@@ -109,25 +127,19 @@ fn main() {
             }
         }
     } else {
-        let contents = fs::read_to_string(aliases_fn.as_str())
-            .expect("Should have been able to read the file");
-        for line in contents.lines() {
-            let mut kv = line.split(" --> ");
-            let key = kv.next().unwrap();
-            let value = kv.next().unwrap();
-            aliases.insert(key.to_string(), value.to_string());
-        }
+        // Use the newly adapted parse function instead of duplicating logic
+        aliases = parse(aliases_fn.as_str(), false);
     }
 
     if args.len() < 2 {
         // Order aliases by key. Lowercase all keys.
-        let mut aliases: Vec<_> = aliases.iter().collect();
-        aliases.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
-        for (key, value) in &aliases {
-            println!("{}", "-".repeat(80));
-            println!("{}\n$ {}", key, value);
+        let mut sorted_aliases: Vec<_> = aliases.iter().collect();
+        sorted_aliases.sort_by(|a, b| a.0.to_lowercase().cmp(&b.0.to_lowercase()));
+        for (key, value) in &sorted_aliases {
+            print_separator();
+            println!("#{}\n{}", key, value);
         }
-        println!("{}", "-".repeat(80));
+        print_separator();
     } else {
         let option = &args[1];
         match option.as_str() {
@@ -167,16 +179,16 @@ fn main() {
                 if args.len() < 3 {
                     if !aliases.contains_key(option) {
                         eprintln!(
-                            "Unknow alias '{}', and too few arguments for creating a new one.",
+                            "Unknown alias '{}', and too few arguments for creating a new one.",
                             option
                         );
                         exit(1);
                     } else {
                         let command = aliases.get(option).unwrap();
                         // Print line of ---
-                        println!("{}", "-".repeat(80));
+                        print_separator();
                         println!("{}", command);
-                        println!("{}", "-".repeat(80));
+                        print_separator();
                         let mut child = Command::new("sh")
                             .arg("-c")
                             .arg(command)
@@ -186,8 +198,8 @@ fn main() {
                             .spawn()
                             .expect("Failed to execute command");
                         let ecode = child.wait().expect("Failed to wait on child");
-                        println!("{}", "-".repeat(80));
-                        exit(ecode.code().unwrap_or(1)); 
+                        print_separator();
+                        exit(ecode.code().unwrap_or(1));
                     }
                 } else {
                     let alias = option;
