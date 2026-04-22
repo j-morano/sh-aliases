@@ -12,8 +12,10 @@ Manage shell aliases.
 Options:
   -e, --edit                 edit aliases using a text editor
   -h, --help                 display this help and exit
-  -r, --remove=ALIAS         remove ALIAS
+  -r, --remove ALIAS         remove ALIAS
   -v, --version              display version information and exit
+  -l, --locations            show locations of config and aliases files
+  -s, --search TEXT          search command (partial) and print its alias
 
 Exit status:
   0  if OK,
@@ -84,17 +86,19 @@ fn print_separator() {
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
+    let home = var("HOME").unwrap();
 
     let mut aliases: HashMap<String, String> = HashMap::new();
+    let mut config_fn = CONFIG_FN.to_string();
+    config_fn = config_fn.replace("$HOME", home.as_str());
 
-    let config_options = if Path::new(CONFIG_FN).exists() {
+    let config_options = if Path::new(&config_fn).exists() {
         parse(CONFIG_FN, false)
     } else {
         parse(DEFAULT_CONFIG, true)
     };
 
     let mut aliases_fn = config_options.get("aliases_fn").unwrap().to_string();
-    let home = var("HOME").unwrap();
     aliases_fn = aliases_fn.replace("$HOME", home.as_str());
 
     if !Path::new(aliases_fn.as_str()).exists() {
@@ -173,6 +177,32 @@ fn main() {
                 aliases.remove(alias);
                 write_aliases(&aliases, aliases_fn);
                 println!("Removed alias '{}'", alias);
+                exit(0);
+            },
+            "-l" | "--locations" => {
+                println!("Config file: {}", config_fn);
+                println!("Aliases file: {}", aliases_fn);
+                exit(0);
+            },
+            "-s" | "--search" => {
+                if args.len() < 3 {
+                    eprintln!("Too few arguments");
+                    exit(1);
+                }
+                let search_term = &args[2].to_lowercase();
+                let mut found = false;
+                for (key, value) in &aliases {
+                    if value.to_lowercase().contains(search_term) {
+                        print_separator();
+                        println!("#{}\n{}", key, value);
+                        found = true;
+                    }
+                }
+                if !found {
+                    eprintln!("No aliases found containing '{}'", search_term);
+                    exit(1);
+                }
+                print_separator();
                 exit(0);
             },
             _ => {
